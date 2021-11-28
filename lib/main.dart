@@ -51,226 +51,6 @@ class _DrawerItemState extends State<DrawerItem> {
   }
 }
 
-class GlobalDrawer extends StatelessWidget {
-  const GlobalDrawer({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      child: Container(
-        padding: EdgeInsets.zero,
-        color: const Color(0xff1a1a1a),
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(image: AssetImage('assets/hackchatbanner.png')),
-                ),
-                child: Column(
-                  children: [
-                    const Text('HackChat',
-                      style: TextStyle(
-                        fontSize: 28,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(Uri.parse(baseUrl).host,
-                      style: const TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              DrawerItem(
-                text: 'Create / Join a room',
-                icon: FontAwesomeIcons.plus,
-                onTap: () {
-                  openChat(context);
-                }
-              ),
-              DrawerItem(
-                text: 'Settings',
-                icon: FontAwesomeIcons.cog,
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
-                },
-              ),
-              const Divider(),
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Default Rooms',
-                  style: TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              DrawerItem(
-                text: '?lounge',
-                onTap: () {
-                  _openRoomPage(context, 'lounge');
-                },
-              ),
-              DrawerItem(
-                text: '?meta',
-                onTap: () {
-                  _openRoomPage(context, 'meta');
-                },
-              ),
-              DrawerItem(
-                text: '?studio',
-                onTap: () {
-                  _openRoomPage(context, 'studio');
-                },
-              ),
-              DrawerItem(
-                text: '?minecraft',
-                onTap: () {
-                  _openRoomPage(context, 'minecraft');
-                },
-              ),
-              DrawerItem(
-                text: '?programming',
-                onTap: () {
-                  _openRoomPage(context, 'programming');
-                },
-              ),
-              DrawerItem(
-                text: '?resourcepacks',
-                onTap: () {
-                  _openRoomPage(context, 'resourcepacks');
-                },
-              ),
-              const Divider(),
-              DrawerItem(
-                text: 'Join Our Discord',
-                icon: FontAwesomeIcons.discord,
-                onTap: () {
-                  launchUrl('https://discord.com/invite/ApqWqYp');
-                },
-              ),
-              DrawerItem(
-                text: 'Check out Our Website',
-                icon: FontAwesomeIcons.globe,
-                onTap: () {
-                  launchUrl('https://studioarchetype.net');
-                },
-              ),
-            ],
-          ),
-      ),
-    );
-  }
-}
-
-class SetNicknameSheet extends StatefulWidget {
-  const SetNicknameSheet({Key? key, required this.onInput}) : super(key: key);
-  final void Function(String) onInput;
-
-  @override
-  _SetNicknameSheetState createState() => _SetNicknameSheetState();
-}
-class _SetNicknameSheetState extends State<SetNicknameSheet> {
-  String _textFieldText = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      height: 200,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Set a nickname'),
-          TextField(
-            onChanged: (text) {
-              setState(() {
-                _textFieldText = text;
-              });
-            },
-          ),
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  child: const Text('Set'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    widget.onInput(_textFieldText);
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: ElevatedButton(
-                    child: const Text('Cancel'),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                )
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class OpenChatSheet extends StatefulWidget {
-  const OpenChatSheet({Key? key}) : super(key: key);
-
-  @override
-  _OpenChatSheetState createState() => _OpenChatSheetState();
-}
-class _OpenChatSheetState extends State<OpenChatSheet> {
-  String _textFieldText = '';
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      height: 200,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Join or create a room'),
-          TextField(
-            onChanged: (text) {
-              setState(() {
-                _textFieldText = text;
-              });
-            },
-          ),
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  child: const Text('Join'),
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _openRoomPage(context, _textFieldText);
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: ElevatedButton(
-                    child: const Text('Cancel'),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                )
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-}
-
 void _openRoomPage(BuildContext context, String roomName) {
   Box box = Hive.box(settingsBox);
 
@@ -327,6 +107,118 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+class GlobalDrawer extends StatelessWidget {
+  const GlobalDrawer({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: Container(
+        padding: EdgeInsets.zero,
+        color: const Color(0xff1a1a1a),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                image: DecorationImage(image: AssetImage('assets/hackchatbanner.png')),
+              ),
+              child: Column(
+                children: [
+                  const Text('HackChat',
+                    style: TextStyle(
+                      fontSize: 28,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(Uri.parse(baseUrl).host,
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DrawerItem(
+                text: 'Create / Join a room',
+                icon: FontAwesomeIcons.plus,
+                onTap: () {
+                  openChat(context);
+                }
+            ),
+            DrawerItem(
+              text: 'Settings',
+              icon: FontAwesomeIcons.cog,
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
+              },
+            ),
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Default Rooms',
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            DrawerItem(
+              text: '?lounge',
+              onTap: () {
+                _openRoomPage(context, 'lounge');
+              },
+            ),
+            DrawerItem(
+              text: '?meta',
+              onTap: () {
+                _openRoomPage(context, 'meta');
+              },
+            ),
+            DrawerItem(
+              text: '?studio',
+              onTap: () {
+                _openRoomPage(context, 'studio');
+              },
+            ),
+            DrawerItem(
+              text: '?minecraft',
+              onTap: () {
+                _openRoomPage(context, 'minecraft');
+              },
+            ),
+            DrawerItem(
+              text: '?programming',
+              onTap: () {
+                _openRoomPage(context, 'programming');
+              },
+            ),
+            DrawerItem(
+              text: '?resourcepacks',
+              onTap: () {
+                _openRoomPage(context, 'resourcepacks');
+              },
+            ),
+            const Divider(),
+            DrawerItem(
+              text: 'Join Our Discord',
+              icon: FontAwesomeIcons.discord,
+              onTap: () {
+                launchUrl('https://discord.com/invite/ApqWqYp');
+              },
+            ),
+            DrawerItem(
+              text: 'Check out Our Website',
+              icon: FontAwesomeIcons.globe,
+              onTap: () {
+                launchUrl('https://studioarchetype.net');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
@@ -341,7 +233,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
+
     return Scaffold(
+      key: _scaffoldKey,
       drawer: const GlobalDrawer(),
       appBar: AppBar(
         title: Text(Uri
@@ -349,7 +244,9 @@ class _MyHomePageState extends State<MyHomePage> {
         .host),
         leading: IconButton(
           icon: const FaIcon(FontAwesomeIcons.bars),
-          onPressed: () => Scaffold.of(context).openDrawer(),
+          onPressed: () {
+            _scaffoldKey.currentState!.openDrawer();
+          },
         ),
       ),
       body: Container(
@@ -412,8 +309,10 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
   @override
   Widget build(BuildContext context) {
     String roomName = widget.roomName;
+    GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
     return Scaffold(
+      key: _scaffoldKey,
       drawer: const GlobalDrawer(),
       appBar: AppBar(
         title: Text('?${widget.roomName}'),
@@ -424,7 +323,9 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         ],
         leading: IconButton(
           icon: const FaIcon(FontAwesomeIcons.bars),
-          onPressed: () => Scaffold.of(context).openDrawer(),
+          onPressed: () {
+            _scaffoldKey.currentState!.openDrawer();
+          },
         ),
       ),
       body: ValueListenableBuilder(
@@ -478,6 +379,113 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class OpenChatSheet extends StatefulWidget {
+  const OpenChatSheet({Key? key}) : super(key: key);
+
+  @override
+  _OpenChatSheetState createState() => _OpenChatSheetState();
+}
+class _OpenChatSheetState extends State<OpenChatSheet> {
+  String _textFieldText = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      height: 200,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Join or create a room'),
+          TextField(
+            onChanged: (text) {
+              setState(() {
+                _textFieldText = text;
+              });
+            },
+          ),
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  child: const Text('Join'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _openRoomPage(context, _textFieldText);
+                  },
+                ),
+                Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: ElevatedButton(
+                      child: const Text('Cancel'),
+                      onPressed: () => Navigator.pop(context),
+                    )
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class SetNicknameSheet extends StatefulWidget {
+  const SetNicknameSheet({Key? key, required this.onInput}) : super(key: key);
+  final void Function(String) onInput;
+
+  @override
+  _SetNicknameSheetState createState() => _SetNicknameSheetState();
+}
+class _SetNicknameSheetState extends State<SetNicknameSheet> {
+  String _textFieldText = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      height: 200,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Set a nickname'),
+          TextField(
+            onChanged: (text) {
+              setState(() {
+                _textFieldText = text;
+              });
+            },
+          ),
+          Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  child: const Text('Set'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    widget.onInput(_textFieldText);
+                  },
+                ),
+                Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: ElevatedButton(
+                      child: const Text('Cancel'),
+                      onPressed: () => Navigator.pop(context),
+                    )
+                )
+              ],
+            ),
+          )
+        ],
       ),
     );
   }

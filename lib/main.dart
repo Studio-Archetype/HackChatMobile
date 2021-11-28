@@ -203,11 +203,11 @@ class _SetNicknameSheetState extends State<SetNicknameSheet> {
                   },
                 ),
                 Padding(
-                    padding: const EdgeInsets.only(left: 16),
-                    child: ElevatedButton(
-                      child: const Text('Cancel'),
-                      onPressed: () => Navigator.pop(context),
-                    )
+                  padding: const EdgeInsets.only(left: 16),
+                  child: ElevatedButton(
+                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.pop(context),
+                  )
                 )
               ],
             ),
@@ -335,7 +335,6 @@ class MyHomePage extends StatefulWidget {
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
-
 class _MyHomePageState extends State<MyHomePage> {
   final Widget hackchatSvg = SvgPicture.asset('assets/hackchat.svg');
   final Widget hackchatSplashBottomSvg = SvgPicture.asset('assets/hackchatsplashbottom.svg');
@@ -412,9 +411,6 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
 
   @override
   Widget build(BuildContext context) {
-    Box box = Hive.box(settingsBox);
-    String baseUrl = box.get('baseUrl');
-
     String roomName = widget.roomName;
 
     return Scaffold(
@@ -486,4 +482,3 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 }
-

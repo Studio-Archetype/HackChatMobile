@@ -24,16 +24,19 @@ class GlobalDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: Hive.box('settings').listenable(),
-      builder: (context, Box box, widget) {
-        return Drawer(
+    TextStyle _whiteText = const TextStyle(
+      color: Colors.white,
+    );
+
+    return Drawer(
+      child: Container(
+        color: const Color(0xff1a1a1a),
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               DrawerHeader(
                 decoration: const BoxDecoration(
-                  color: Colors.deepPurple,
+                  color: Colors.blueGrey,
                 ),
                 child: Column(
                   children: [
@@ -222,13 +225,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Box box = Hive.box(settingsBox);
-    String baseUrl = box.get('baseUrl');
-
     return MaterialApp(
       title: 'HackChat',
       theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
+        primarySwatch: Colors.blueGrey,
+        textTheme: GoogleFonts.jetBrainsMonoTextTheme(
+          Theme.of(context).textTheme,
+        ),
       ),
       home: MyHomePage(title: Uri.parse(baseUrl).host),
     );
@@ -244,28 +247,55 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final Widget hackchatSvg = SvgPicture.asset('assets/hackchat.svg');
+  final Widget hackchatSplashBottomSvg = SvgPicture.asset('assets/hackchatsplashbottom.svg');
+
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: Hive.box('settings').listenable(),
-      builder: (context, Box box, widget) {
-        String baseUrl = box.get('baseUrl');
-        return Scaffold(
-          drawer: const GlobalDrawer(),
-          appBar: AppBar(
-            title: Text(Uri
-            .parse(baseUrl)
-            .host),
+    return Scaffold(
+      drawer: const GlobalDrawer(),
+      appBar: AppBar(
+        title: Text(Uri
+        .parse(baseUrl)
+        .host),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            radius: 1.5,
+            colors: [
+              Color(0xff262626),
+              Color(0xff1a1a1a),
+            ],
           ),
-          body: WebView(
-            initialUrl: baseUrl,
-            javascriptMode: JavascriptMode.unrestricted,
-            onWebViewCreated: (controller) {
-              controller.loadUrl(baseUrl);
-            },
-          ),
-        );
-      },
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: SizedBox(
+                height: 150,
+                child: hackchatSvg,
+              ),
+            ),
+            const Expanded(child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Text('Welcome, this is a privately hosted instance of hack.chat, operated by STUDIO ARCHETYPE.\nThis system is used internally for temporary support and self destructing chat, as we primarily use Discord.',
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+            )),
+            Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: SizedBox(
+                height: 100,
+                child: hackchatSplashBottomSvg,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

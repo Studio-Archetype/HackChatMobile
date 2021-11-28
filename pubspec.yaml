@@ -1,6 +1,6 @@
-name: HackChat
-description: HackChat client
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+name: Chat.Bytecode.Ninja
+description: HackChat client for StudioArchetype
+publish_to: 'none' # Remove this line if you wish to publish to pub.chat
 version: 1.0.0+1
 environment:
   sdk: ">=2.12.0 <3.0.0"

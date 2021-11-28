@@ -1,20 +1,27 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:settings_ui/settings_ui.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-const defaultBaseUrl = 'https://hack.chat';
+const baseUrl = 'https://chat.bytecode.ninja';
 const settingsBox = 'settings';
 
 Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox(settingsBox);
-  Hive.box(settingsBox).put('baseUrl', defaultBaseUrl);
+
+  LicenseRegistry.addLicense(() async* {
+    final license = await rootBundle.loadString('google_fonts/OFL.txt');
+    yield LicenseEntryWithLineBreaks(['google_fonts'], license);
+  });
 
   runApp(const MyApp());
 }
@@ -46,30 +53,88 @@ class GlobalDrawer extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-                    Text(Uri.parse(box.get('baseUrl')).host,
-                      style: const TextStyle(
-                        color: Colors.white,
-                      ),
+                    Text(Uri.parse(baseUrl).host,
+                      style: _whiteText,
                     ),
                   ],
                 ),
               ),
               ListTile(
-                title: const Text('Create / Join a room'),
+                tileColor: const Color(0xff1a1a1a),
+                title: Text('Join Our Discord', style: _whiteText),
+                onTap: () {
+                  launchUrl('https://discord.com/invite/ApqWqYp');
+                },
+              ),
+              ListTile(
+                tileColor: const Color(0xff1a1a1a),
+                title: Text('Check out Our Website', style: _whiteText),
+                onTap: () {
+                  launchUrl('https://studioarchetype.net');
+                },
+              ),
+              const Divider(),
+              const Padding(
+                padding: EdgeInsets.only(left: 16),
+                child: Text('Default Rooms',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              ListTile(
+                title: Text('?lounge', style: _whiteText),
+                onTap: () {
+                  _openRoomPage(context, 'lounge');
+                },
+              ),
+              ListTile(
+                title: Text('?meta', style: _whiteText),
+                onTap: () {
+                  _openRoomPage(context, 'meta');
+                },
+              ),
+              ListTile(
+                title: Text('?studio', style: _whiteText),
+                onTap: () {
+                  _openRoomPage(context, 'studio');
+                },
+              ),
+              ListTile(
+                title: Text('?minecraft', style: _whiteText),
+                onTap: () {
+                  _openRoomPage(context, 'minecraft');
+                },
+              ),
+              ListTile(
+                title: Text('?programming', style: _whiteText),
+                onTap: () {
+                  _openRoomPage(context, 'programming');
+                },
+              ),
+              ListTile(
+                title: Text('?resourcepacks', style: _whiteText),
+                onTap: () {
+                  _openRoomPage(context, 'resourcepacks');
+                },
+              ),
+              const Divider(),
+              ListTile(
+                title: Text('Create / Join a room', style: _whiteText),
                 onTap: () {
                   openChat(context);
                 },
               ),
               ListTile(
-                title: const Text('Settings'),
+                title: Text('Settings', style: _whiteText),
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
                 },
               ),
             ],
           ),
-        );
-      }
+      ),
     );
   }
 }
@@ -92,7 +157,7 @@ class _SetNicknameSheetState extends State<SetNicknameSheet> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
+        children: [
           const Text('Set a nickname'),
           TextField(
             onChanged: (text) {
@@ -145,7 +210,7 @@ class _OpenChatSheetState extends State<OpenChatSheet> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
+        children: [
           const Text('Join or create a room'),
           TextField(
             onChanged: (text) {
@@ -365,19 +430,8 @@ class _SettingsPageState extends State<SettingsPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Text('Base URL',
+                const Text('Nickname',
                   style: TextStyle(fontWeight: FontWeight.bold)
-                ),
-                TextFormField(
-                  initialValue: box.get('baseUrl'),
-                  onChanged: (text) {
-                    box.put('baseUrl', text);
-                  },
-                ),
-                const Padding(padding: EdgeInsets.only(top: 16),
-                  child: Text('Nickname',
-                    style: TextStyle(fontWeight: FontWeight.bold)
-                  ),
                 ),
                 TextFormField(
                   initialValue: box.get('nickname'),

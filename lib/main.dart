@@ -10,6 +10,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 const baseUrl = 'https://chat.bytecode.ninja';
 const settingsBox = 'settings';
@@ -26,24 +27,45 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-class GlobalDrawer extends StatelessWidget {
-  const GlobalDrawer({Key? key}) : super(key: key);
+class DrawerItem extends StatefulWidget {
+  const DrawerItem({Key? key, required this.text, this.icon, required this.onTap}) : super(key: key);
+  final String text;
+  final IconData? icon;
+  final Function() onTap;
 
+  @override
+  _DrawerItemState createState() => _DrawerItemState();
+}
+class _DrawerItemState extends State<DrawerItem> {
   @override
   Widget build(BuildContext context) {
     TextStyle _whiteText = const TextStyle(
       color: Colors.white,
     );
 
+    return ListTile(
+      title: Text(widget.text, style: _whiteText),
+      leading: widget.icon != null ? FaIcon(widget.icon!, color: Colors.grey) : null,
+      onTap: widget.onTap,
+    );
+  }
+}
+
+class GlobalDrawer extends StatelessWidget {
+  const GlobalDrawer({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Drawer(
       child: Container(
+        padding: EdgeInsets.zero,
         color: const Color(0xff1a1a1a),
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
               DrawerHeader(
                 decoration: const BoxDecoration(
-                  color: Colors.blueGrey,
+                  image: DecorationImage(image: AssetImage('assets/hackchatbanner.png')),
                 ),
                 child: Column(
                   children: [
@@ -54,82 +76,85 @@ class GlobalDrawer extends StatelessWidget {
                       ),
                     ),
                     Text(Uri.parse(baseUrl).host,
-                      style: _whiteText,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
               ),
-              ListTile(
-                tileColor: const Color(0xff1a1a1a),
-                title: Text('Join Our Discord', style: _whiteText),
+              DrawerItem(
+                text: 'Create / Join a room',
+                icon: FontAwesomeIcons.plus,
                 onTap: () {
-                  launchUrl('https://discord.com/invite/ApqWqYp');
-                },
+                  openChat(context);
+                }
               ),
-              ListTile(
-                tileColor: const Color(0xff1a1a1a),
-                title: Text('Check out Our Website', style: _whiteText),
+              DrawerItem(
+                text: 'Settings',
+                icon: FontAwesomeIcons.cog,
                 onTap: () {
-                  launchUrl('https://studioarchetype.net');
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
                 },
               ),
               const Divider(),
               const Padding(
-                padding: EdgeInsets.only(left: 16),
+                padding: EdgeInsets.all(16),
                 child: Text('Default Rooms',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Colors.grey,
                   ),
                 ),
               ),
-              ListTile(
-                title: Text('?lounge', style: _whiteText),
+              DrawerItem(
+                text: '?lounge',
                 onTap: () {
                   _openRoomPage(context, 'lounge');
                 },
               ),
-              ListTile(
-                title: Text('?meta', style: _whiteText),
+              DrawerItem(
+                text: '?meta',
                 onTap: () {
                   _openRoomPage(context, 'meta');
                 },
               ),
-              ListTile(
-                title: Text('?studio', style: _whiteText),
+              DrawerItem(
+                text: '?studio',
                 onTap: () {
                   _openRoomPage(context, 'studio');
                 },
               ),
-              ListTile(
-                title: Text('?minecraft', style: _whiteText),
+              DrawerItem(
+                text: '?minecraft',
                 onTap: () {
                   _openRoomPage(context, 'minecraft');
                 },
               ),
-              ListTile(
-                title: Text('?programming', style: _whiteText),
+              DrawerItem(
+                text: '?programming',
                 onTap: () {
                   _openRoomPage(context, 'programming');
                 },
               ),
-              ListTile(
-                title: Text('?resourcepacks', style: _whiteText),
+              DrawerItem(
+                text: '?resourcepacks',
                 onTap: () {
                   _openRoomPage(context, 'resourcepacks');
                 },
               ),
               const Divider(),
-              ListTile(
-                title: Text('Create / Join a room', style: _whiteText),
+              DrawerItem(
+                text: 'Join Our Discord',
+                icon: FontAwesomeIcons.discord,
                 onTap: () {
-                  openChat(context);
+                  launchUrl('https://discord.com/invite/ApqWqYp');
                 },
               ),
-              ListTile(
-                title: Text('Settings', style: _whiteText),
+              DrawerItem(
+                text: 'Check out Our Website',
+                icon: FontAwesomeIcons.globe,
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
+                  launchUrl('https://studioarchetype.net');
                 },
               ),
             ],
@@ -323,6 +348,10 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(Uri
         .parse(baseUrl)
         .host),
+        leading: IconButton(
+          icon: const FaIcon(FontAwesomeIcons.bars),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -395,8 +424,12 @@ class _ChatRoomPageState extends State<ChatRoomPage> {
         actions: [
           IconButton(onPressed: () {
             Navigator.pop(context);
-          }, icon: const Icon(Icons.home))
+          }, icon: const FaIcon(FontAwesomeIcons.home))
         ],
+        leading: IconButton(
+          icon: const FaIcon(FontAwesomeIcons.bars),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
       ),
       body: ValueListenableBuilder(
         valueListenable: Hive.box('settings').listenable(),
@@ -417,24 +450,30 @@ class SettingsPage extends StatefulWidget {
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
-
 class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text('Settings'),
+      ),
       body: ValueListenableBuilder(
         valueListenable: Hive.box('settings').listenable(),
         builder: (context, Box box, widget) {
           return Container(
+            color: const Color(0xff1a1a1a),
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 const Text('Nickname',
-                  style: TextStyle(fontWeight: FontWeight.bold)
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
                 ),
                 TextFormField(
                   initialValue: box.get('nickname'),
+                  style: const TextStyle(color: Colors.white),
                   onChanged: (text) {
                     box.put('nickname', text);
                   },

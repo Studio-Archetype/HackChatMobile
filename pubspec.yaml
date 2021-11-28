@@ -12,7 +12,8 @@ dependencies:
   hive_flutter: ^1.1.0
   url_launcher: ^5.7.10
   cupertino_icons: ^1.0.2
-  settings_ui:
+  flutter_svg: ^0.23.0+1
+  google_fonts: ^2.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -22,6 +23,9 @@ dev_dependencies:
   flutter_launcher_icons:
 flutter:
   uses-material-design: true
+  assets:
+    - assets/
+    - google_fonts/
 flutter_icons:
   image_path: 'assets/images/icon.png'
   android: true

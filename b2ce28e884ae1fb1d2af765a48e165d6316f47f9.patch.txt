@@ -1,0 +1,820 @@
+From b2ce28e884ae1fb1d2af765a48e165d6316f47f9 Mon Sep 17 00:00:00 2001
+From: Liz <lizainslie16@gmail.com>
+Date: Tue, 30 Nov 2021 00:49:50 -0600
+Subject: [PATCH] Feat: Restructure app code into separate page/component files
+
+Signed-off-by: Liz <lizainslie16@gmail.com>
+---
+ lib/common.dart                               |  51 +++
+ lib/components/global_drawer.dart             |  58 +++
+ lib/components/sheets/open_chat_sheet.dart    |  57 +++
+ lib/components/sheets/set_nickname_sheet.dart |  55 +++
+ lib/main.dart                                 | 341 +-----------------
+ lib/pages/chat_room.dart                      |  59 +++
+ lib/pages/home.dart                           |  40 ++
+ lib/pages/settings.dart                       |  55 +++
+ 8 files changed, 379 insertions(+), 337 deletions(-)
+ create mode 100644 lib/common.dart
+ create mode 100644 lib/components/global_drawer.dart
+ create mode 100644 lib/components/sheets/open_chat_sheet.dart
+ create mode 100644 lib/components/sheets/set_nickname_sheet.dart
+ create mode 100644 lib/pages/chat_room.dart
+ create mode 100644 lib/pages/home.dart
+ create mode 100644 lib/pages/settings.dart
+
+diff --git a/lib/common.dart b/lib/common.dart
+new file mode 100644
+index 0000000..914abea
+--- /dev/null
++++ b/lib/common.dart
+@@ -0,0 +1,51 @@
++import 'package:flutter/material.dart';
++import 'package:hive/hive.dart';
++import 'package:url_launcher/url_launcher.dart';
++
++import 'components/sheets/open_chat_sheet.dart';
++import 'components/sheets/set_nickname_sheet.dart';
++
++import 'pages/chat_room.dart';
++
++const settingsBox = 'settings';
++
++void openRoomPage(BuildContext context, String roomName) {
++  Box settings = Hive.box(settingsBox);
++
++  if (settings.containsKey('nickname')) {
++    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatRoomPage(
++      roomName: roomName,
++      nickname: settings.get('nickname'),
++    )));
++  } else {
++    showModalBottomSheet(
++      context: context,
++      builder: (BuildContext context) {
++        return SetNicknameSheet(onInput: (text) {
++          settings.put('nickname', text);
++          Navigator.push(context, MaterialPageRoute(builder: (context) => ChatRoomPage(
++            roomName: roomName,
++            nickname: text
++          )));
++        });
++      },
++    );
++  }
++}
++
++void openChat(BuildContext context) {
++  showModalBottomSheet(
++    context: context,
++    builder: (BuildContext context) {
++      return const OpenChatSheet();
++    },
++  );
++}
++
++void launchUrl(String url) async {
++  if (await canLaunch(url)) {
++    await launch(url);
++  } else {
++    throw 'Unable to launch URL: $url';
++  }
++}
+\ No newline at end of file
+diff --git a/lib/components/global_drawer.dart b/lib/components/global_drawer.dart
+new file mode 100644
+index 0000000..b8f1709
+--- /dev/null
++++ b/lib/components/global_drawer.dart
+@@ -0,0 +1,58 @@
++import 'package:flutter/material.dart';
++import 'package:hive/hive.dart';
++import 'package:hive_flutter/hive_flutter.dart';
++
++import '../pages/settings.dart';
++import '../common.dart';
++
++class GlobalDrawer extends StatelessWidget {
++  const GlobalDrawer({Key? key}) : super(key: key);
++
++  @override
++  Widget build(BuildContext context) {
++    return ValueListenableBuilder(
++        valueListenable: Hive.box(settingsBox).listenable(),
++        builder: (context, Box settings, widget) {
++          return Drawer(
++            child: ListView(
++              padding: EdgeInsets.zero,
++              children: [
++                DrawerHeader(
++                  decoration: const BoxDecoration(
++                    color: Colors.deepPurple,
++                  ),
++                  child: Column(
++                    children: [
++                      const Text('HackChat',
++                        style: TextStyle(
++                          fontSize: 28,
++                          color: Colors.white,
++                        ),
++                      ),
++                      Text(Uri.parse(settings.get('baseUrl')).host,
++                        style: const TextStyle(
++                          color: Colors.white,
++                        ),
++                      ),
++                    ],
++                  ),
++                ),
++                ListTile(
++                  title: const Text('Create / Join a room'),
++                  onTap: () {
++                    openChat(context);
++                  },
++                ),
++                ListTile(
++                  title: const Text('Settings'),
++                  onTap: () {
++                    Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
++                  },
++                ),
++              ],
++            ),
++          );
++        }
++    );
++  }
++}
+\ No newline at end of file
+diff --git a/lib/components/sheets/open_chat_sheet.dart b/lib/components/sheets/open_chat_sheet.dart
+new file mode 100644
+index 0000000..22f42b2
+--- /dev/null
++++ b/lib/components/sheets/open_chat_sheet.dart
+@@ -0,0 +1,57 @@
++import 'package:flutter/material.dart';
++
++import '../../common.dart';
++
++class OpenChatSheet extends StatefulWidget {
++  const OpenChatSheet({Key? key}) : super(key: key);
++
++  @override
++  _OpenChatSheetState createState() => _OpenChatSheetState();
++}
++
++class _OpenChatSheetState extends State<OpenChatSheet> {
++  String _textFieldText = '';
++
++  @override
++  Widget build(BuildContext context) {
++    return Container(
++      padding: const EdgeInsets.all(16.0),
++      height: 200,
++      child: Column(
++        mainAxisAlignment: MainAxisAlignment.center,
++        mainAxisSize: MainAxisSize.min,
++        children: [
++          const Text('Join or create a room'),
++          TextField(
++            onChanged: (text) {
++              setState(() {
++                _textFieldText = text;
++              });
++            },
++          ),
++          Center(
++            child: Row(
++              mainAxisAlignment: MainAxisAlignment.center,
++              children: [
++                ElevatedButton(
++                  child: const Text('Join'),
++                  onPressed: () {
++                    Navigator.pop(context);
++                    openRoomPage(context, _textFieldText);
++                  },
++                ),
++                Padding(
++                    padding: const EdgeInsets.only(left: 16),
++                    child: ElevatedButton(
++                      child: const Text('Cancel'),
++                      onPressed: () => Navigator.pop(context),
++                    )
++                )
++              ],
++            ),
++          )
++        ],
++      ),
++    );
++  }
++}
+\ No newline at end of file
+diff --git a/lib/components/sheets/set_nickname_sheet.dart b/lib/components/sheets/set_nickname_sheet.dart
+new file mode 100644
+index 0000000..8aa21f0
+--- /dev/null
++++ b/lib/components/sheets/set_nickname_sheet.dart
+@@ -0,0 +1,55 @@
++import 'package:flutter/material.dart';
++
++class SetNicknameSheet extends StatefulWidget {
++  const SetNicknameSheet({Key? key, required this.onInput}) : super(key: key);
++  final void Function(String) onInput;
++
++  @override
++  _SetNicknameSheetState createState() => _SetNicknameSheetState();
++}
++class _SetNicknameSheetState extends State<SetNicknameSheet> {
++  String _textFieldText = '';
++
++  @override
++  Widget build(BuildContext context) {
++    return Container(
++      padding: const EdgeInsets.all(16.0),
++      height: 200,
++      child: Column(
++        mainAxisAlignment: MainAxisAlignment.center,
++        mainAxisSize: MainAxisSize.min,
++        children: [
++          const Text('Set a nickname'),
++          TextField(
++            onChanged: (text) {
++              setState(() {
++                _textFieldText = text;
++              });
++            },
++          ),
++          Center(
++            child: Row(
++              mainAxisAlignment: MainAxisAlignment.center,
++              children: [
++                ElevatedButton(
++                  child: const Text('Set'),
++                  onPressed: () {
++                    Navigator.pop(context);
++                    widget.onInput(_textFieldText);
++                  },
++                ),
++                Padding(
++                    padding: const EdgeInsets.only(left: 16),
++                    child: ElevatedButton(
++                      child: const Text('Cancel'),
++                      onPressed: () => Navigator.pop(context),
++                    )
++                )
++              ],
++            ),
++          )
++        ],
++      ),
++    );
++  }
++}
+\ No newline at end of file
+diff --git a/lib/main.dart b/lib/main.dart
+index 78aeb7f..1b562c7 100644
+--- a/lib/main.dart
++++ b/lib/main.dart
+@@ -1,14 +1,12 @@
+-import 'dart:io';
+-
++import 'package:HackChat/pages/home.dart';
+ import 'package:flutter/cupertino.dart';
+ import 'package:flutter/material.dart';
+ import 'package:hive/hive.dart';
+ import 'package:hive_flutter/hive_flutter.dart';
+-import 'package:webview_flutter/webview_flutter.dart';
+-import 'package:url_launcher/url_launcher.dart';
++
++import 'common.dart';
+ 
+ const defaultBaseUrl = 'https://hack.chat';
+-const settingsBox = 'settings';
+ 
+ main() async {
+   await Hive.initFlutter();
+@@ -21,348 +19,17 @@ main() async {
+   runApp(const MyApp());
+ }
+ 
+-class GlobalDrawer extends StatelessWidget {
+-  const GlobalDrawer({Key? key}) : super(key: key);
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return ValueListenableBuilder(
+-      valueListenable: Hive.box('settings').listenable(),
+-      builder: (context, Box box, widget) {
+-        return Drawer(
+-          child: ListView(
+-            padding: EdgeInsets.zero,
+-            children: [
+-              DrawerHeader(
+-                decoration: const BoxDecoration(
+-                  color: Colors.deepPurple,
+-                ),
+-                child: Column(
+-                  children: [
+-                    const Text('HackChat',
+-                      style: TextStyle(
+-                        fontSize: 28,
+-                        color: Colors.white,
+-                      ),
+-                    ),
+-                    Text(Uri.parse(box.get('baseUrl')).host,
+-                      style: const TextStyle(
+-                        color: Colors.white,
+-                      ),
+-                    ),
+-                  ],
+-                ),
+-              ),
+-              ListTile(
+-                title: const Text('Create / Join a room'),
+-                onTap: () {
+-                  openChat(context);
+-                },
+-              ),
+-              ListTile(
+-                title: const Text('Settings'),
+-                onTap: () {
+-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
+-                },
+-              ),
+-            ],
+-          ),
+-        );
+-      }
+-    );
+-  }
+-}
+-
+-class SetNicknameSheet extends StatefulWidget {
+-  const SetNicknameSheet({Key? key, required this.onInput}) : super(key: key);
+-  final void Function(String) onInput;
+-
+-  @override
+-  _SetNicknameSheetState createState() => _SetNicknameSheetState();
+-}
+-class _SetNicknameSheetState extends State<SetNicknameSheet> {
+-  String _textFieldText = '';
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return Container(
+-      padding: const EdgeInsets.all(16.0),
+-      height: 200,
+-      child: Column(
+-        mainAxisAlignment: MainAxisAlignment.center,
+-        mainAxisSize: MainAxisSize.min,
+-        children: [
+-          const Text('Set a nickname'),
+-          TextField(
+-            onChanged: (text) {
+-              setState(() {
+-                _textFieldText = text;
+-              });
+-            },
+-          ),
+-          Center(
+-            child: Row(
+-              mainAxisAlignment: MainAxisAlignment.center,
+-              children: [
+-                ElevatedButton(
+-                  child: const Text('Set'),
+-                  onPressed: () {
+-                    Navigator.pop(context);
+-                    widget.onInput(_textFieldText);
+-                  },
+-                ),
+-                Padding(
+-                    padding: const EdgeInsets.only(left: 16),
+-                    child: ElevatedButton(
+-                      child: const Text('Cancel'),
+-                      onPressed: () => Navigator.pop(context),
+-                    )
+-                )
+-              ],
+-            ),
+-          )
+-        ],
+-      ),
+-    );
+-  }
+-}
+-
+-class OpenChatSheet extends StatefulWidget {
+-  const OpenChatSheet({Key? key}) : super(key: key);
+-
+-  @override
+-  _OpenChatSheetState createState() => _OpenChatSheetState();
+-}
+-class _OpenChatSheetState extends State<OpenChatSheet> {
+-  String _textFieldText = '';
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return Container(
+-      padding: const EdgeInsets.all(16.0),
+-      height: 200,
+-      child: Column(
+-        mainAxisAlignment: MainAxisAlignment.center,
+-        mainAxisSize: MainAxisSize.min,
+-        children: [
+-          const Text('Join or create a room'),
+-          TextField(
+-            onChanged: (text) {
+-              setState(() {
+-                _textFieldText = text;
+-              });
+-            },
+-          ),
+-          Center(
+-            child: Row(
+-              mainAxisAlignment: MainAxisAlignment.center,
+-              children: [
+-                ElevatedButton(
+-                  child: const Text('Join'),
+-                  onPressed: () {
+-                    Navigator.pop(context);
+-                    _openRoomPage(context, _textFieldText);
+-                  },
+-                ),
+-                Padding(
+-                  padding: const EdgeInsets.only(left: 16),
+-                  child: ElevatedButton(
+-                    child: const Text('Cancel'),
+-                    onPressed: () => Navigator.pop(context),
+-                  )
+-                )
+-              ],
+-            ),
+-          )
+-        ],
+-      ),
+-    );
+-  }
+-}
+-
+-void _openRoomPage(BuildContext context, String roomName) {
+-  Box box = Hive.box(settingsBox);
+-
+-  if (box.containsKey('nickname')) {
+-    Navigator.push(context, MaterialPageRoute(builder: (context) => ChatRoomPage(
+-      roomName: roomName,
+-      nickname: box.get('nickname'),
+-    )));
+-  } else {
+-    showModalBottomSheet<void>(
+-      context: context,
+-      builder: (BuildContext context) {
+-        return SetNicknameSheet(onInput: (text) {
+-          box.put('nickname', text);
+-          Navigator.push(context, MaterialPageRoute(builder: (context) => ChatRoomPage(
+-            roomName: roomName,
+-            nickname: text
+-          )));
+-        });
+-      },
+-    );
+-  }
+-}
+-void openChat(BuildContext context) {
+-  showModalBottomSheet<void>(
+-    context: context,
+-    builder: (BuildContext context) {
+-      return const OpenChatSheet();
+-    },
+-  );
+-}
+-void launchUrl(String url) async {
+-  if (await canLaunch(url)) {
+-    await launch(url);
+-  } else {
+-    throw 'Unable to launch URL: $url';
+-  }
+-}
+-
+ class MyApp extends StatelessWidget {
+   const MyApp({Key? key}) : super(key: key);
+ 
+   @override
+   Widget build(BuildContext context) {
+-    Box box = Hive.box(settingsBox);
+-    String baseUrl = box.get('baseUrl');
+-
+     return MaterialApp(
+       title: 'HackChat',
+       theme: ThemeData(
+         primarySwatch: Colors.deepPurple,
+       ),
+-      home: MyHomePage(title: Uri.parse(baseUrl).host),
+-    );
+-  }
+-}
+-
+-class MyHomePage extends StatefulWidget {
+-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+-  final String title;
+-
+-  @override
+-  State<MyHomePage> createState() => _MyHomePageState();
+-}
+-
+-class _MyHomePageState extends State<MyHomePage> {
+-  @override
+-  Widget build(BuildContext context) {
+-    return ValueListenableBuilder(
+-      valueListenable: Hive.box('settings').listenable(),
+-      builder: (context, Box box, widget) {
+-        String baseUrl = box.get('baseUrl');
+-        return Scaffold(
+-          drawer: const GlobalDrawer(),
+-          appBar: AppBar(
+-            title: Text(Uri
+-            .parse(baseUrl)
+-            .host),
+-          ),
+-          body: WebView(
+-            initialUrl: baseUrl,
+-            javascriptMode: JavascriptMode.unrestricted,
+-            onWebViewCreated: (controller) {
+-              controller.loadUrl(baseUrl);
+-            },
+-          ),
+-        );
+-      },
++      home: const HomePage(),
+     );
+   }
+ }
+-
+-class ChatRoomPage extends StatefulWidget {
+-  const ChatRoomPage({Key? key, required this.roomName, required this.nickname}) : super(key: key);
+-  final String roomName;
+-  final String nickname;
+-
+-  @override
+-  _ChatRoomPageState createState() => _ChatRoomPageState();
+-}
+-class _ChatRoomPageState extends State<ChatRoomPage> {
+-  @override
+-  void initState() {
+-    super.initState();
+-    // Enable hybrid composition.
+-    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
+-  }
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    Box box = Hive.box(settingsBox);
+-    String baseUrl = box.get('baseUrl');
+-
+-    String roomName = widget.roomName;
+-
+-    return Scaffold(
+-      drawer: const GlobalDrawer(),
+-      appBar: AppBar(
+-        title: Text('?${widget.roomName}'),
+-        actions: [
+-          IconButton(onPressed: () {
+-            Navigator.pop(context);
+-          }, icon: const Icon(Icons.home))
+-        ],
+-      ),
+-      body: ValueListenableBuilder(
+-        valueListenable: Hive.box('settings').listenable(),
+-        builder: (context, Box box, widget) {
+-          return WebView(
+-            initialUrl: '$baseUrl?$roomName#${box.get('nickname')}',
+-            javascriptMode: JavascriptMode.unrestricted,
+-          );
+-        },
+-      ),
+-    );
+-  }
+-}
+-
+-class SettingsPage extends StatefulWidget {
+-  const SettingsPage({Key? key}) : super(key: key);
+-
+-  @override
+-  _SettingsPageState createState() => _SettingsPageState();
+-}
+-
+-class _SettingsPageState extends State<SettingsPage> {
+-  @override
+-  Widget build(BuildContext context) {
+-    return Scaffold(
+-      appBar: AppBar(),
+-      body: ValueListenableBuilder(
+-        valueListenable: Hive.box('settings').listenable(),
+-        builder: (context, Box box, widget) {
+-          return Container(
+-            padding: const EdgeInsets.all(16),
+-            child: Column(
+-              children: [
+-                const Text('Base URL',
+-                  style: TextStyle(fontWeight: FontWeight.bold)
+-                ),
+-                TextFormField(
+-                  initialValue: box.get('baseUrl'),
+-                  onChanged: (text) {
+-                    box.put('baseUrl', text);
+-                  },
+-                ),
+-                const Padding(padding: EdgeInsets.only(top: 16),
+-                  child: Text('Nickname',
+-                    style: TextStyle(fontWeight: FontWeight.bold)
+-                  ),
+-                ),
+-                TextFormField(
+-                  initialValue: box.get('nickname'),
+-                  onChanged: (text) {
+-                    box.put('nickname', text);
+-                  },
+-                ),
+-              ],
+-            ),
+-          );
+-        },
+-      ),
+-    );
+-  }
+-}
+-
+diff --git a/lib/pages/chat_room.dart b/lib/pages/chat_room.dart
+new file mode 100644
+index 0000000..7654ef3
+--- /dev/null
++++ b/lib/pages/chat_room.dart
+@@ -0,0 +1,59 @@
++import 'dart:io';
++
++import 'package:flutter/material.dart';
++import 'package:hive/hive.dart';
++import 'package:hive_flutter/hive_flutter.dart';
++import 'package:webview_flutter/webview_flutter.dart';
++
++import '../common.dart';
++import '../components/global_drawer.dart';
++
++class ChatRoomPage extends StatefulWidget {
++  const ChatRoomPage({Key? key, required this.roomName, required this.nickname}) : super(key: key);
++  final String roomName;
++  final String nickname;
++
++  @override
++  _ChatRoomPageState createState() => _ChatRoomPageState();
++}
++
++class _ChatRoomPageState extends State<ChatRoomPage> {
++  @override
++  void initState() {
++    super.initState();
++    // Enable hybrid composition.
++    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return ValueListenableBuilder(
++      valueListenable: Hive.box(settingsBox).listenable(),
++      builder: (context, Box settings, _) {
++        String nickname = settings.get('nickname');
++        String baseUrl = settings.get('baseUrl');
++
++        String webViewUrl = '$baseUrl?${widget.roomName}#$nickname';
++
++        return Scaffold(
++          drawer: const GlobalDrawer(),
++          appBar: AppBar(
++            title: Text('?${widget.roomName}'),
++            actions: [
++              IconButton(onPressed: () {
++                Navigator.pop(context);
++              }, icon: const Icon(Icons.home))
++            ],
++          ),
++          body: WebView(
++            initialUrl: webViewUrl,
++            javascriptMode: JavascriptMode.unrestricted,
++            onWebViewCreated: (controller) {
++              controller.loadUrl(webViewUrl);
++            },
++          ),
++        );
++      },
++    );
++  }
++}
+\ No newline at end of file
+diff --git a/lib/pages/home.dart b/lib/pages/home.dart
+new file mode 100644
+index 0000000..9ddb434
+--- /dev/null
++++ b/lib/pages/home.dart
+@@ -0,0 +1,40 @@
++import 'package:flutter/material.dart';
++import 'package:hive/hive.dart';
++import 'package:hive_flutter/hive_flutter.dart';
++import 'package:webview_flutter/webview_flutter.dart';
++
++import '../common.dart';
++import '../components/global_drawer.dart';
++
++class HomePage extends StatefulWidget {
++  const HomePage({Key? key}) : super(key: key);
++
++  @override
++  State<HomePage> createState() => _HomePageState();
++}
++
++class _HomePageState extends State<HomePage> {
++  @override
++  Widget build(BuildContext context) {
++    return ValueListenableBuilder(
++      valueListenable: Hive.box(settingsBox).listenable(),
++      builder: (context, Box settings, widget) {
++        String baseUrl = settings.get('baseUrl');
++
++        return Scaffold(
++          drawer: const GlobalDrawer(),
++          appBar: AppBar(
++            title: Text(Uri.parse(baseUrl).host),
++          ),
++          body: WebView(
++            initialUrl: baseUrl,
++            javascriptMode: JavascriptMode.unrestricted,
++            onWebViewCreated: (controller) {
++              controller.loadUrl(baseUrl);
++            },
++          ),
++        );
++      },
++    );
++  }
++}
+\ No newline at end of file
+diff --git a/lib/pages/settings.dart b/lib/pages/settings.dart
+new file mode 100644
+index 0000000..d6454a3
+--- /dev/null
++++ b/lib/pages/settings.dart
+@@ -0,0 +1,55 @@
++import 'package:flutter/material.dart';
++import 'package:hive/hive.dart';
++import 'package:hive_flutter/hive_flutter.dart';
++
++import '../common.dart';
++
++class SettingsPage extends StatefulWidget {
++  const SettingsPage({Key? key}) : super(key: key);
++
++  @override
++  _SettingsPageState createState() => _SettingsPageState();
++}
++
++class _SettingsPageState extends State<SettingsPage> {
++  @override
++  Widget build(BuildContext context) {
++    return Scaffold(
++      appBar: AppBar(
++        title: const Text('Settings')
++      ),
++      body: ValueListenableBuilder(
++        valueListenable: Hive.box(settingsBox).listenable(),
++        builder: (context, Box settings, widget) {
++          return Container(
++            padding: const EdgeInsets.all(16),
++            child: Column(
++              children: [
++                const Text('Base URL',
++                  style: TextStyle(fontWeight: FontWeight.bold)
++                ),
++                TextFormField(
++                  initialValue: settings.get('baseUrl'),
++                  onChanged: (text) {
++                    settings.put('baseUrl', text);
++                  },
++                ),
++                const Padding(padding: EdgeInsets.only(top: 16),
++                  child: Text('Nickname',
++                      style: TextStyle(fontWeight: FontWeight.bold)
++                  ),
++                ),
++                TextFormField(
++                  initialValue: settings.get('nickname'),
++                  onChanged: (text) {
++                    settings.put('nickname', text);
++                  },
++                ),
++              ],
++            ),
++          );
++        },
++      ),
++    );
++  }
++}
+\ No newline at end of file

@@ -30,8 +30,16 @@ class _SettingsPageState extends State<SettingsPage> {
             child: ListView(
               children: [
                 ListTile(
-                  title: const Text('Nickname'),
-                  subtitle: Text(nickname),
+                  title: const Text('Nickname',
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                  subtitle: Text(nickname,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
                   onTap: () {
                     showModalBottomSheet(
                       context: context,
